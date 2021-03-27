@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "630954167347",
+    "project_id": "trusty-vim-131013",
+    "storage_bucket": "trusty-vim-131013.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:630954167347:android:dd7558df8a3db4157f6746",
+        "android_client_info": {
+          "package_name": "com.eselman.locationreminderapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "630954167347-14t9gnb6edloiqc7min4nhv9om7a6s89.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.eselman.locationreminderapp",
+            "certificate_hash": "7dd91c62058b3aa1a35cdee47932dfdadc375e51"
+          }
+        },
+        {
+          "client_id": "630954167347-mjej5pjsufd64po8gs5ve2bptai9r921.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyApJJrCc9HGmN9LgMYMUtDyZiAPkDcaVBY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "630954167347-mjej5pjsufd64po8gs5ve2bptai9r921.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
