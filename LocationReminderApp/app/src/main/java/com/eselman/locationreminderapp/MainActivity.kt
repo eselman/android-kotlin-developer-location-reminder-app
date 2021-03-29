@@ -46,38 +46,68 @@ class MainActivity : AppCompatActivity() {
         NavigationUI.setupActionBarWithNavController(this, navController)
 
         view = findViewById(R.id.mainContainer)
-
-        checkPermissionsAndStartGeofencing()
     }
 
     override fun onSupportNavigateUp(): Boolean {
         return NavigationUI.navigateUp(navController, null)
     }
 
-    private fun checkPermissionsAndStartGeofencing() {
-        if (foregroundAndBackgroundLocationPermissionApproved()) {
-            checkDeviceLocationSettingsAndStartGeofence()
+    fun checkPermissionsAndStartGeofencing() {
+        if (foregroundPermissionApproved()) {
+            if (runningQOrLater) {
+                if (backgroundPermissionApproved()) {
+                    checkDeviceLocationSettingsAndStartGeofence()
+                } else {
+                    requestBackgroundLocationPermission()
+                }
+            } else {
+                checkDeviceLocationSettingsAndStartGeofence()
+            }
         } else {
-            requestForegroundAndBackgroundLocationPermissions()
+            requestForegroundLocationPermission()
         }
     }
 
-    @TargetApi(29)
-    private fun foregroundAndBackgroundLocationPermissionApproved(): Boolean {
-        val foregroundLocationApproved = (
-            PackageManager.PERMISSION_GRANTED ==
+    private fun foregroundPermissionApproved(): Boolean {
+        return PackageManager.PERMISSION_GRANTED ==
                 ActivityCompat.checkSelfPermission(this,
-                    Manifest.permission.ACCESS_FINE_LOCATION))
-        val backgroundPermissionApproved =
-            if (runningQOrLater) {
-                PackageManager.PERMISSION_GRANTED ==
-                    ActivityCompat.checkSelfPermission(
-                        this, Manifest.permission.ACCESS_BACKGROUND_LOCATION
-                    )
-            } else {
-                true
-            }
-        return foregroundLocationApproved && backgroundPermissionApproved
+                    Manifest.permission.ACCESS_FINE_LOCATION)
+    }
+
+    @TargetApi(29)
+    private fun backgroundPermissionApproved(): Boolean {
+        return  PackageManager.PERMISSION_GRANTED ==
+                ActivityCompat.checkSelfPermission(
+                    this, Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                )
+    }
+
+
+    private fun requestForegroundLocationPermission() {
+        Log.d(GeofencingConstants.TAG, "Request foreground location permission")
+        if (foregroundPermissionApproved())
+            return
+        val permissionsArray = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
+        val resultCode = REQUEST_FOREGROUND_PERMISSION_REQUEST_CODE
+        ActivityCompat.requestPermissions(
+            this@MainActivity,
+            permissionsArray,
+            resultCode
+        )
+    }
+
+    @TargetApi(29)
+    private fun requestBackgroundLocationPermission() {
+        Log.d(GeofencingConstants.TAG, "Request background location permission")
+        if (backgroundPermissionApproved())
+            return
+        val permissionsArray = arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+        val resultCode = REQUEST_BACKGROUND_PERMISSION_REQUEST_CODE
+        ActivityCompat.requestPermissions(
+            this@MainActivity,
+            permissionsArray,
+            resultCode
+        )
     }
 
     private fun checkDeviceLocationSettingsAndStartGeofence(resolve:Boolean = true) {
@@ -114,26 +144,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    @TargetApi(29 )
-    private fun requestForegroundAndBackgroundLocationPermissions() {
-        if (foregroundAndBackgroundLocationPermissionApproved())
-            return
-        var permissionsArray = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
-        val resultCode = when {
-            runningQOrLater -> {
-                permissionsArray += Manifest.permission.ACCESS_BACKGROUND_LOCATION
-                REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE
-            }
-            else -> REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE
-        }
-        Log.d(GeofencingConstants.TAG, "Request foreground only location permission")
-        ActivityCompat.requestPermissions(
-            this@MainActivity,
-            permissionsArray,
-            resultCode
-        )
-    }
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_TURN_DEVICE_LOCATION_ON) {
@@ -153,27 +163,53 @@ class MainActivity : AppCompatActivity() {
                 enableMyLocation()
             }
         } else {
-            if (
-                    grantResults.isEmpty() ||
-                    grantResults[LOCATION_PERMISSION_INDEX] == PackageManager.PERMISSION_DENIED ||
-                    (requestCode == REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE &&
-                            grantResults[BACKGROUND_LOCATION_PERMISSION_INDEX] ==
-                            PackageManager.PERMISSION_DENIED)) {
+            when (requestCode) {
+                REQUEST_FOREGROUND_PERMISSION_REQUEST_CODE -> {
+                    if (grantResults.isNotEmpty() && (grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                        ) {
+                        if (runningQOrLater) {
+                            if (backgroundPermissionApproved()) {
+                                checkDeviceLocationSettingsAndStartGeofence()
+                            } else {
+                                requestBackgroundLocationPermission()
+                            }
+                        } else {
+                            checkDeviceLocationSettingsAndStartGeofence()
+                        }
+                    } else {
+                        Snackbar.make(
+                            view,
+                            R.string.permission_denied_explanation,
+                            Snackbar.LENGTH_INDEFINITE
+                        )
+                            .setAction(R.string.settings) {
+                                startActivity(Intent().apply {
+                                    action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                                    data = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
+                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                })
+                            }.show()
+                    }
+                }
 
-                Snackbar.make(
-                        view,
-                        R.string.permission_denied_explanation,
-                        Snackbar.LENGTH_INDEFINITE
-                )
-                        .setAction(R.string.settings) {
-                            startActivity(Intent().apply {
-                                action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-                                data = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
-                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                            })
-                        }.show()
-            } else {
-                checkDeviceLocationSettingsAndStartGeofence()
+                REQUEST_BACKGROUND_PERMISSION_REQUEST_CODE -> {
+                    if (grantResults.isNotEmpty() && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                        checkDeviceLocationSettingsAndStartGeofence()
+                    } else {
+                        Snackbar.make(
+                            view,
+                            R.string.permission_denied_explanation,
+                            Snackbar.LENGTH_INDEFINITE
+                        )
+                            .setAction(R.string.settings) {
+                                startActivity(Intent().apply {
+                                    action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                                    data = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
+                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                })
+                            }.show()
+                    }
+                }
             }
         }
     }
@@ -205,8 +241,6 @@ class MainActivity : AppCompatActivity() {
 }
 
 private const val REQUEST_TURN_DEVICE_LOCATION_ON = 29
-private const val REQUEST_FOREGROUND_AND_BACKGROUND_PERMISSION_RESULT_CODE = 33
-private const val REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE = 34
-private const val LOCATION_PERMISSION_INDEX = 0
-private const val BACKGROUND_LOCATION_PERMISSION_INDEX = 1
+private const val REQUEST_FOREGROUND_PERMISSION_REQUEST_CODE = 34
+private const val REQUEST_BACKGROUND_PERMISSION_REQUEST_CODE = 36
 private const val REQUEST_LOCATION_PERMISSION = 100

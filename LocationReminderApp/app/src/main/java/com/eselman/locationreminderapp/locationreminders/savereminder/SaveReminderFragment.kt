@@ -74,9 +74,6 @@ class SaveReminderFragment : BaseFragment() {
             val longitude = viewModel.longitude.value
             val reminderDataItem = ReminderDataItem(title, description,location,latitude,longitude)
             viewModel.validateAndSaveReminder(reminderDataItem)
-            if (reminderDataItem.location != null) {
-                addGeofence(reminderDataItem)
-            }
         }
     }
 

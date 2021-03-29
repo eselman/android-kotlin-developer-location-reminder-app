@@ -3,6 +3,7 @@ package com.eselman.locationreminderapp.locationreminders.reminderslist
 import android.os.Bundle
 import android.view.*
 import androidx.databinding.DataBindingUtil
+import com.eselman.locationreminderapp.MainActivity
 import com.eselman.locationreminderapp.R
 import com.eselman.locationreminderapp.base.BaseFragment
 import com.eselman.locationreminderapp.base.NavigationCommand
@@ -17,6 +18,9 @@ class ReminderListFragment : BaseFragment() {
     //use Koin to retrieve the ViewModel instance
     override val viewModel: RemindersListViewModel by viewModel()
     private lateinit var binding: FragmentRemindersBinding
+
+    private var hasRequestedPermission = false
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -52,6 +56,13 @@ class ReminderListFragment : BaseFragment() {
                 )
             }
         })
+
+       viewModel.showNoData.observe(viewLifecycleOwner, {
+           if (it == false && !hasRequestedPermission)  {
+               hasRequestedPermission = true
+               (requireActivity() as MainActivity).checkPermissionsAndStartGeofencing()
+           }
+       })
     }
 
     override fun onResume() {

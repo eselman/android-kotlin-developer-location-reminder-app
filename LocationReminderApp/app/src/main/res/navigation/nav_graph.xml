@@ -38,7 +38,7 @@
     <fragment
         android:id="@+id/authenticationFragment"
         android:name="com.eselman.locationreminderapp.authentication.AuthenticationFragment"
-        android:label="fragment_login"
+        android:label="Login"
         tools:layout="@layout/fragment_authentication" >
         <action
             android:id="@+id/action_authenticationFragment_to_reminderListFragment"
