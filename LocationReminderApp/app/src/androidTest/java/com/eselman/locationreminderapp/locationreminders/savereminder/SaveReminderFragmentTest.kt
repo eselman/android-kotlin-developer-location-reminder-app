@@ -92,21 +92,4 @@ class SaveReminderFragmentTest:
                 SaveReminderFragmentDirections.actionSaveReminderFragmentToSelectLocationFragment()
         )
     }
-
-    @Test
-    fun reminderSaved_navigateBackToList() = runBlockingTest {
-        val scenario = launchFragmentInContainer<SaveReminderFragment>(Bundle(), R.style.AppTheme)
-
-        val navController = Mockito.mock(NavController::class.java)
-        scenario.onFragment {
-            Navigation.setViewNavController(it.view!!, navController)
-        }
-
-        Espresso.onView(ViewMatchers.withId(R.id.saveReminder))
-                .perform(ViewActions.click())
-
-        Mockito.verify(navController).navigate(
-                SaveReminderFragmentDirections.actionSaveReminderFragmentToReminderListFragment()
-        )
-    }
 }

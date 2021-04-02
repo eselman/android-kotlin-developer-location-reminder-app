@@ -1,15 +1,11 @@
 package com.eselman.locationreminderapp.locationreminders.savereminder.selectreminderlocation
 
 
-import android.Manifest
-import android.annotation.SuppressLint
-import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.os.Bundle
 import android.util.Log
 import android.view.*
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import com.eselman.locationreminderapp.MainActivity
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -34,9 +30,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     private lateinit var map: GoogleMap
 
-    companion object {
-        private const val REQUEST_LOCATION_PERMISSION = 100
-    }
+    private var currentSelectedPoi: PointOfInterest? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -55,7 +49,13 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-        return binding.root
+        binding.saveSelectedLocation.setOnClickListener {
+            currentSelectedPoi?.let {
+                onLocationSelected(it)
+            }
+        }
+
+       return binding.root
     }
 
     private fun onLocationSelected(poi: PointOfInterest) {
@@ -66,7 +66,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             )
         )
     }
-
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.map_options, menu)
@@ -108,13 +107,15 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     }
     private fun setPoiClick(map: GoogleMap) {
         map.setOnPoiClickListener { poi ->
+            map.clear()
             val poiMarker = map.addMarker(
                 MarkerOptions()
                     .position(poi.latLng)
                     .title(poi.name)
             )
             poiMarker.showInfoWindow()
-            onLocationSelected(poi)
+            currentSelectedPoi = poi
+            binding.saveSelectedLocation.show()
         }
     }
 
