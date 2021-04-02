@@ -60,7 +60,7 @@ class SaveReminderViewModelTest {
         val dataSource = FakeDataSource(false)
         dataSource.setReturnError(true)
         saveReminderViewModel = SaveReminderViewModel(ApplicationProvider.getApplicationContext(), dataSource)
-        var reminder = ReminderDataItem("", "reminder description", "location",0.0,0.0)
+        val reminder = ReminderDataItem("", "reminder description", "location",0.0,0.0)
         saveReminderViewModel.validateAndSaveReminder(reminder)
 
         assertThat(saveReminderViewModel.showSnackBarInt.getOrAwaitValue(), Matchers.`is`(R.string.err_enter_title))
