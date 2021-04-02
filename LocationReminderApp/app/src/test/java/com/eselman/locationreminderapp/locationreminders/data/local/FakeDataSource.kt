@@ -7,7 +7,7 @@ import com.eselman.locationreminderapp.locationreminders.data.dto.Result
 
 //Use FakeDataSource that acts as a test double to the LocalDataSource
 class FakeDataSource(private val emptyData: Boolean) : ReminderDataSource {
-
+    private var shouldReturnError = false
 
     private val reminders = mutableListOf(
             ReminderDTO("reminder1", "reminder description", "location",0.0,0.0, "1111"),
@@ -18,17 +18,27 @@ class FakeDataSource(private val emptyData: Boolean) : ReminderDataSource {
 
     private val emptyReminders = mutableListOf<ReminderDTO>()
 
+
+    fun setReturnError(value: Boolean) {
+        shouldReturnError = value
+    }
+
     override suspend fun getReminders(): Result<List<ReminderDTO>> {
-        return if (emptyData) Result.Success(emptyReminders) else Result.Success(reminders)
+        return if (shouldReturnError) {
+            Result.Error("Error getting reminders")
+        } else {
+            if (emptyData) Result.Success(emptyReminders) else Result.Success(reminders)
+        }
     }
 
     override suspend fun saveReminder(reminder: ReminderDTO) {
-        reminders.add(reminder)
+        if (!shouldReturnError) {
+            reminders.add(reminder)
+        }
     }
 
     override suspend fun getReminder(id: String): Result<ReminderDTO> {
-          val reminder = reminders.first { it.id == id }
-           return Result.Success(reminder)
+        return if (shouldReturnError) Result.Error("Error getting reminder") else Result.Success(reminders.first { it.id == id })
     }
 
     override suspend fun deleteAllReminders() {
